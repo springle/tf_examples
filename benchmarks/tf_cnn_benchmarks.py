@@ -1323,7 +1323,7 @@ def store_benchmarks(names_to_values):
 def main(server, log_dir):
   FLAGS.model = "inception3"
   FLAGS.num_gpus = server.server_def.default_session_config.device_count['GPU']
-  FLAGS.variable_update = "parameter_server"
+  FLAGS.variable_update = "distributed_replicated"
   FLAGS.local_parameter_device = "cpu"
   FLAGS.batch_size=32
   FLAGS.task_index = server.server_def.task_index
