@@ -752,8 +752,8 @@ class BenchmarkCNN(object):
       self.model_conf.set_learning_rate(FLAGS.learning_rate)
 
     self.job_name = FLAGS.job_name  # "" for local training
-    self.ps_hosts = FLAGS.ps_hosts.split(',')
-    self.worker_hosts = FLAGS.worker_hosts.split(',')
+    self.ps_hosts = FLAGS.ps_hosts
+    self.worker_hosts = FLAGS.worker_hosts
     self.dataset = None
     self.data_name = FLAGS.data_name
     if FLAGS.data_dir is not None:
