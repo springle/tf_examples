@@ -722,7 +722,7 @@ def load_checkpoint(saver, sess, ckpt_dir):
 class BenchmarkCNN(object):
   """Class for benchmarking a cnn network."""
 
-  def __init__(self):
+  def __init__(self, server=None):
     self.model = FLAGS.model
     self.model_conf = model_config.get_model_config(self.model)
     self.trace_filename = FLAGS.trace_file
@@ -777,7 +777,7 @@ class BenchmarkCNN(object):
       self.task_index = FLAGS.task_index
       self.cluster = tf.train.ClusterSpec({'ps': self.ps_hosts,
                                            'worker': self.worker_hosts})
-      self.server = None
+      self.server = server
 
       if not self.server:
         self.server = tf.train.Server(self.cluster, job_name=self.job_name,
@@ -1320,7 +1320,20 @@ def store_benchmarks(names_to_values):
     benchmark_storage.store_benchmark(names_to_values, FLAGS.result_storage)
 
 
-def main(_):
+def main(server, log_dir):
+  FLAGS.model = inception3
+  FLAGS.num_gpus = server.server_def.default_session_config.device_count['GPU']
+  FLAGS.variable_update = "parameter_server"
+  FLAGS.local_parameter_device = "cpu"
+  FLAGS.batch_size=8
+  FLAGS.task_index = server.server_def.task_index
+  FLAGS.job_name = "worker"
+  FLAGS.train_dir = log_dir
+  num_ps = len(server.server_def.cluster.job[0].tasks)
+  num_workers = len(server.server_def.cluster.job[1].tasks)
+  FLAGS.ps_hosts = ['' for _ in range(num_ps)] # hack for len() calls
+  FLAGS.worker_hosts = ['' for _ in range(num_workers)] # hack for len() calls
+
   if FLAGS.winograd_nonfused:
     os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
   else:
@@ -1332,7 +1345,7 @@ def main(_):
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
-  bench = BenchmarkCNN()
+  bench = BenchmarkCNN(server)
 
   tfversion = cnn_util.tensorflow_version_tuple()
   log_fn('TensorFlow:  %i.%i' % (tfversion[0], tfversion[1]))
