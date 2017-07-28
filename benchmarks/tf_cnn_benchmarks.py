@@ -1321,11 +1321,11 @@ def store_benchmarks(names_to_values):
 
 
 def main(server, log_dir, context=None):
-  FLAGS.model = "inception3"
-  FLAGS.num_gpus = server.server_def.default_session_config.device_count['GPU']
-  FLAGS.variable_update = "parameter_server"
+  FLAGS.model = context["model"]
+  FLAGS.num_gpus = server.server_def.default_session_config.device_count["GPU"]
+  FLAGS.variable_update = context["variable_update"]
   FLAGS.local_parameter_device = "cpu"
-  FLAGS.batch_size= 64
+  FLAGS.batch_size= context["batch_size"]
   FLAGS.task_index = server.server_def.task_index
   FLAGS.job_name = "worker"
   FLAGS.train_dir = log_dir
