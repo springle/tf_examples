@@ -1320,7 +1320,7 @@ def store_benchmarks(names_to_values):
     benchmark_storage.store_benchmark(names_to_values, FLAGS.result_storage)
 
 
-def main(server, log_dir):
+def main(server, log_dir, context=None):
   FLAGS.model = "inception3"
   FLAGS.num_gpus = server.server_def.default_session_config.device_count['GPU']
   FLAGS.variable_update = "parameter_server"
