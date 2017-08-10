@@ -1322,6 +1322,7 @@ def store_benchmarks(names_to_values):
 
 def main(server, log_dir, context):
     FLAGS.model = context.get("model") or "inception3"
+    FLAGS.device = context.get("device") or "gpu"
     FLAGS.batch_size = context.get("batch_size") or 32
     FLAGS.variable_update = context.get("variable_update") or "parameter_server"
     FLAGS.local_parameter_device = context.get("local_parameter_device") or "gpu"
