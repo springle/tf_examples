@@ -775,8 +775,7 @@ class BenchmarkCNN(object):
         self.local_parameter_device_flag = FLAGS.local_parameter_device
         if self.job_name:
             self.task_index = FLAGS.task_index
-            self.cluster = tf.train.ClusterSpec({'ps': self.ps_hosts,
-                                                 'worker': self.worker_hosts})
+            self.cluster = server.server_def.cluster
             self.server = server
 
             if not self.server:
@@ -1332,14 +1331,8 @@ def main(server, log_dir, context):
     FLAGS.job_name = "worker"
     FLAGS.num_gpus = server.server_def.default_session_config.device_count["GPU"]
     FLAGS.task_index = server.server_def.task_index
-    if len(server.server_def.cluster.job) > 1:
-        num_ps = len(server.server_def.cluster.job[0].tasks)
-        num_workers = len(server.server_def.cluster.job[1].tasks)
-        FLAGS.ps_hosts = ['' for _ in range(num_ps)]  # hack for len() calls
-    else:
-        num_workers = len(server.server_def.cluster.job[0].tasks)
-        FLAGS.ps_hosts = []
-    FLAGS.worker_hosts = ['' for _ in range(num_workers)]  # hack for len() calls
+    FLAGS.worker_hosts = server.server_def.cluster.job[0].tasks
+    FLAGS.ps_hosts = server.server_def.cluster.job[1].tasks if len(server.server_def.cluster.job) > 1 else []
 
     if FLAGS.winograd_nonfused:
         os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
