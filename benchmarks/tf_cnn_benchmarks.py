@@ -1332,8 +1332,11 @@ def main(server, log_dir, context):
     FLAGS.job_name = "worker"
     FLAGS.num_gpus = server.server_def.default_session_config.device_count["GPU"]
     FLAGS.task_index = server.server_def.task_index
-    num_ps = len(server.server_def.cluster.job[0].tasks)
-    num_workers = len(server.server_def.cluster.job[1].tasks)
+    if len(server.server_def.cluster.job) > 1:
+        num_ps = len(server.server_def.cluster.job[0].tasks)
+        num_workers = len(server.server_def.cluster.job[1].tasks)
+    else:
+        num_workers = len(server.server_def.cluster.job[0].tasks)
     FLAGS.ps_hosts = ['' for _ in range(num_ps)]  # hack for len() calls
     FLAGS.worker_hosts = ['' for _ in range(num_workers)]  # hack for len() calls
 
