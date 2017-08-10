@@ -1324,11 +1324,9 @@ def main(server, log_dir, context):
     FLAGS.model = context.get("model") or "inception3"
     FLAGS.device = context.get("device") or "gpu"
     FLAGS.batch_size = context.get("batch_size") or 32
-    FLAGS.variable_update = context.get("variable_update") or "parameter_server"
-    FLAGS.local_parameter_device = context.get("local_parameter_device") or "gpu"
+    FLAGS.variable_update = context.get("variable_update") or "distributed_replicated"
+    FLAGS.local_parameter_device = context.get("local_parameter_device") or "cpu"
     FLAGS.num_batches = context.get("num_batches") or 100
-    FLAGS.num_warmup_batches = context.get("num_warmup_batches") or None
-    FLAGS.cross_replica_sync = context.get("cross_replica_sync") or True
     FLAGS.train_dir = log_dir + "/train"
     FLAGS.eval_dir = log_dir + "/eval"
     FLAGS.job_name = "worker"
