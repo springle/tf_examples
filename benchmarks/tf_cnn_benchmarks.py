@@ -1289,7 +1289,7 @@ class BenchmarkCNN(object):
       an op that should be used as control dependency before starting next step.
     """
         self.sync_queue_counter += 1
-        num_workers = self.cluster.num_tasks('worker')
+        num_workers = len(FLAGS.worker_hosts)
         with tf.device(self.sync_queue_devices[
                                    self.sync_queue_counter % len(self.sync_queue_devices)]):
             sync_queues = [
