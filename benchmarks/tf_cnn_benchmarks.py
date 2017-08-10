@@ -1335,9 +1335,10 @@ def main(server, log_dir, context):
     if len(server.server_def.cluster.job) > 1:
         num_ps = len(server.server_def.cluster.job[0].tasks)
         num_workers = len(server.server_def.cluster.job[1].tasks)
+        FLAGS.ps_hosts = ['' for _ in range(num_ps)]  # hack for len() calls
     else:
         num_workers = len(server.server_def.cluster.job[0].tasks)
-    FLAGS.ps_hosts = ['' for _ in range(num_ps)]  # hack for len() calls
+        FLAGS.ps_hosts = []
     FLAGS.worker_hosts = ['' for _ in range(num_workers)]  # hack for len() calls
 
     if FLAGS.winograd_nonfused:
