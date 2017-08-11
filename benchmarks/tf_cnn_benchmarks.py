@@ -62,7 +62,7 @@ tf.flags.DEFINE_boolean('forward_only', False, """whether use forward-only or
 tf.flags.DEFINE_integer('batch_size', 0, 'batch size per compute device')
 tf.flags.DEFINE_integer('num_batches', 100,
                         'number of batches to run, excluding warmup')
-tf.flags.DEFINE_integer('num_warmup_batches', None,
+tf.flags.DEFINE_integer('num_warmup_batches', 0,
                         'number of batches to run before timing')
 tf.flags.DEFINE_integer('autotune_threshold', None,
                         'The autotune threshold for the models')
