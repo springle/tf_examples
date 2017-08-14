@@ -1320,20 +1320,32 @@ def store_benchmarks(names_to_values):
 
 
 def main(server, log_dir, context):
+    """
+    server: a tf.train.Server object (which knows about every other member of the cluster)
+    log_dir: a string providing the recommended location for training logs, summaries, and checkpoints
+    context: an optional dictionary of parameters (batch_size, learning_rate, etc.) specified at run-time
+    """
+
+    # Handle context
     FLAGS.model = context.get("model") or "inception3"
     FLAGS.device = context.get("device") or "gpu"
     FLAGS.batch_size = context.get("batch_size") or 32
     FLAGS.variable_update = context.get("variable_update") or "distributed_replicated"
     FLAGS.local_parameter_device = context.get("local_parameter_device") or "cpu"
     FLAGS.num_batches = context.get("num_batches") or 100
+
+    # Handle log_dir
     FLAGS.train_dir = log_dir + "/train"
     FLAGS.eval_dir = log_dir + "/eval"
-    FLAGS.job_name = "worker"
+
+    # Handle server
     FLAGS.num_gpus = server.server_def.default_session_config.device_count["GPU"]
     FLAGS.task_index = server.server_def.task_index
     FLAGS.ps_hosts = server.server_def.cluster.job[0].tasks
     FLAGS.worker_hosts = server.server_def.cluster.job[1].tasks
+    FLAGS.job_name = "worker"
 
+    # Unmodified from here
     if FLAGS.winograd_nonfused:
         os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
     else:
