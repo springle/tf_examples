@@ -57,12 +57,12 @@ def main(server, log_dir, context):
                                            hooks=hooks) as mon_sess:
         local_step = 0
         while not mon_sess.should_stop():
-            if local_step % 10:
+            if local_step % 10 == 0:
                 eval_xs, eval_ys = mnist.test.images, mnist.test.labels
                 summary, acc = mon_sess.run([merged, accuracy],
                                             feed_dict={x: eval_xs, y_: eval_ys})
                 test_writer.add_summary(summary, local_step)
-                print('Accuracy at global step {} (local step: {}): {}'.format(
+                print('Accuracy at global step {} (local step {}): {}'.format(
                     mon_sess.run(global_step), local_step, acc))
             else:
                 train_xs, train_ys = mnist.train.next_batch(100)
