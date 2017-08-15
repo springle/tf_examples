@@ -64,11 +64,10 @@ def main(server, log_dir, context):
                 test_writer.add_summary(summary, local_step)
                 print('Accuracy at global step {} (local step {}): {}'.format(
                     mon_sess.run(global_step), local_step, acc))
-            else:
-                train_xs, train_ys = mnist.train.next_batch(100)
-                summary, _ = mon_sess.run([merged, train_op],
-                                          feed_dict={x: train_xs, y_: train_ys})
-                train_writer.add_summary(summary, local_step)
+            train_xs, train_ys = mnist.train.next_batch(100)
+            summary, _ = mon_sess.run([merged, train_op],
+                                      feed_dict={x: train_xs, y_: train_ys})
+            train_writer.add_summary(summary, local_step)
             local_step += 1
         train_writer.close()
         test_writer.close()
