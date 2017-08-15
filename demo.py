@@ -52,10 +52,8 @@ def main(server, log_dir, context):
 
     # Begin distributed training
     is_chief = server.server_def.task_index == 0
-    checkpoint_dir = log_dir + '/checkpoints'
     with tf.train.MonitoredTrainingSession(master=server.target,
                                            is_chief=is_chief,
-                                           checkpoint_dir=checkpoint_dir,
                                            hooks=hooks) as mon_sess:
         local_step = 0
         while not mon_sess.should_stop():
