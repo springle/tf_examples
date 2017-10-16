@@ -1333,10 +1333,11 @@ def main(server, log_dir, context):
     FLAGS.variable_update = context.get("variable_update") or "distributed_replicated"
     FLAGS.local_parameter_device = context.get("local_parameter_device") or "cpu"
     FLAGS.num_batches = context.get("num_batches") or 100
+    run_name = context.get("run_name") or "default"
 
     # Handle log_dir
-    FLAGS.train_dir = log_dir + "/train"
-    FLAGS.eval_dir = log_dir + "/eval"
+    FLAGS.train_dir = log_dir + "/" + run_name + "/train"
+    FLAGS.eval_dir = log_dir + "/" + run_name
 
     # Handle server
     FLAGS.num_gpus = server.server_def.default_session_config.device_count["GPU"]
