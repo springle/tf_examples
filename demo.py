@@ -24,7 +24,7 @@ def main(server, log_dir, context):
     num_training_steps = context.get('num_training_steps') or 1000000
 
     # Import data
-    data_dir = log_dir + '/data'
+    data_dir = './MNIST_DATA'
     mnist = input_data.read_data_sets(data_dir, one_hot=True)
 
     # Create the model
