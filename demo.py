@@ -47,7 +47,8 @@ def main(server, log_dir, context):
     # Add summaries
     tf.summary.scalar('accuracy', accuracy)
     merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(log_dir + '/train', tf.get_default_graph())
+    train_writer = tf.summary.FileWriter(log_dir + '/train',
+                                         tf.get_default_graph())
     test_writer = tf.summary.FileWriter(log_dir + '/test')
 
     # Begin distributed training
@@ -55,19 +56,23 @@ def main(server, log_dir, context):
     with tf.train.MonitoredTrainingSession(master=server.target,
                                            is_chief=is_chief,
                                            hooks=hooks) as mon_sess:
-        local_step = 0
-        while not mon_sess.should_stop():
-            if local_step % 10 == 0:
-                eval_xs, eval_ys = mnist.test.images, mnist.test.labels
-                summary, acc = mon_sess.run([merged, accuracy],
-                                            feed_dict={x: eval_xs, y_: eval_ys})
-                test_writer.add_summary(summary, local_step)
-                print('Accuracy at global step {} (local step {}): {}'.format(
-                    mon_sess.run(global_step), local_step, acc))
-            train_xs, train_ys = mnist.train.next_batch(100)
-            summary, _ = mon_sess.run([merged, train_op],
-                                      feed_dict={x: train_xs, y_: train_ys})
-            train_writer.add_summary(summary, local_step)
-            local_step += 1
-        train_writer.close()
-        test_writer.close()
+        with tf.device(tf.train.replica_device_setter(
+                        worker_device="/job:worker/task:%d" %
+                        server.server_def.task_index,
+                        cluster=server.server_def.cluster)):
+            local_step = 0
+            while not mon_sess.should_stop():
+                if local_step % 10 == 0:
+                    eval_xs, eval_ys = mnist.test.images, mnist.test.labels
+                    summary, acc = mon_sess.run([merged, accuracy],
+                                                feed_dict={x: eval_xs, y_: eval_ys})
+                    test_writer.add_summary(summary, local_step)
+                    print('Accuracy at global step {} (local step {}): {}'.format(
+                        mon_sess.run(global_step), local_step, acc))
+                train_xs, train_ys = mnist.train.next_batch(100)
+                summary, _ = mon_sess.run([merged, train_op],
+                                          feed_dict={x: train_xs, y_: train_ys})
+                train_writer.add_summary(summary, local_step)
+                local_step += 1
+            train_writer.close()
+            test_writer.close()
