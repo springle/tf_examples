@@ -27,39 +27,40 @@ def main(server, log_dir, context):
     data_dir = log_dir + '/data'
     mnist = input_data.read_data_sets(data_dir, one_hot=True)
 
-    # Create the model
-    x = tf.placeholder(tf.float32, [None, 784])
-    W = tf.Variable(tf.zeros([784, 10]))
-    b = tf.Variable(tf.zeros([10]))
-    y = tf.matmul(x, W) + b
-    y_ = tf.placeholder(tf.float32, [None, 10])
-    cross_entropy = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-    global_step = tf.contrib.framework.get_or_create_global_step()
-    train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(
-        cross_entropy, global_step=global_step)
-    hooks = [tf.train.StopAtStepHook(last_step=num_training_steps)]
+    with tf.device(tf.train.replica_device_setter(
+                    worker_device="/job:worker/task:%d" %
+                    server.server_def.task_index,
+                    cluster=server.server_def.cluster)):
 
-    # Evaluate the model
-    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        # Create the model
+        x = tf.placeholder(tf.float32, [None, 784])
+        W = tf.Variable(tf.zeros([784, 10]))
+        b = tf.Variable(tf.zeros([10]))
+        y = tf.matmul(x, W) + b
+        y_ = tf.placeholder(tf.float32, [None, 10])
+        cross_entropy = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+        global_step = tf.contrib.framework.get_or_create_global_step()
+        train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(
+            cross_entropy, global_step=global_step)
+        hooks = [tf.train.StopAtStepHook(last_step=num_training_steps)]
 
-    # Add summaries
-    tf.summary.scalar('accuracy', accuracy)
-    merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(log_dir + '/train',
-                                         tf.get_default_graph())
-    test_writer = tf.summary.FileWriter(log_dir + '/test')
+        # Evaluate the model
+        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+        # Add summaries
+        tf.summary.scalar('accuracy', accuracy)
+        merged = tf.summary.merge_all()
+        train_writer = tf.summary.FileWriter(log_dir + '/train',
+                                             tf.get_default_graph())
+        test_writer = tf.summary.FileWriter(log_dir + '/test')
 
     # Begin distributed training
     is_chief = server.server_def.task_index == 0
     with tf.train.MonitoredTrainingSession(master=server.target,
                                            is_chief=is_chief,
                                            hooks=hooks) as mon_sess:
-        with tf.device(tf.train.replica_device_setter(
-                        worker_device="/job:worker/task:%d" %
-                        server.server_def.task_index,
-                        cluster=server.server_def.cluster)):
             local_step = 0
             while not mon_sess.should_stop():
                 if local_step % 10 == 0:
