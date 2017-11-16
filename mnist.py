@@ -54,15 +54,17 @@ def main(server, log_dir, context):
     merged = tf.summary.merge_all()
 
     # Initialize writers
-    is_chief = server.server_def.task_index == 0
+    is_chief = (server.server_def.task_index == 0)
     train_writer = tf.summary.FileWriter(log_dir + '/train',
                                          tf.get_default_graph()) if is_chief else None
     test_writer = tf.summary.FileWriter(log_dir + '/test') if is_chief else None
 
     # Begin training
+    config = server.server_def.default_session_config
     with tf.train.MonitoredTrainingSession(master=server.target,
                                            is_chief=is_chief,
-                                           hooks=hooks) as mon_sess:
+                                           hooks=hooks,
+                                           config=config) as mon_sess:
         local_step = 0
         while not mon_sess.should_stop():
 
