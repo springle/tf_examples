@@ -28,9 +28,9 @@ def main(server, log_dir, context):
     mnist = input_data.read_data_sets(data_dir, one_hot=True)
 
     with tf.device(tf.train.replica_device_setter(
-                    worker_device="/job:worker/task:%d" %
-                    server.server_def.task_index,
-                    cluster=server.server_def.cluster)):
+                   worker_device="/job:worker/task:%d" %
+                   server.server_def.task_index,
+                   cluster=server.server_def.cluster)):
 
         # Create the model
         x = tf.placeholder(tf.float32, [None, 784])
@@ -45,35 +45,46 @@ def main(server, log_dir, context):
             cross_entropy, global_step=global_step)
         hooks = [tf.train.StopAtStepHook(last_step=num_training_steps)]
 
-        # Evaluate the model
-        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    # Evaluate the model
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-        # Add summaries
-        tf.summary.scalar('accuracy', accuracy)
-        merged = tf.summary.merge_all()
+    # Add summaries
+    tf.summary.scalar('accuracy', accuracy)
+    merged = tf.summary.merge_all()
 
-    # Begin distributed training
+    # Initialize writers
     is_chief = server.server_def.task_index == 0
-    train_writer = tf.summary.FileWriter(log_dir + '/train', tf.get_default_graph()) if is_chief else None
+    train_writer = tf.summary.FileWriter(log_dir + '/train',
+                                         tf.get_default_graph()) if is_chief else None
     test_writer = tf.summary.FileWriter(log_dir + '/test') if is_chief else None
+
+    # Begin training
     with tf.train.MonitoredTrainingSession(master=server.target,
                                            is_chief=is_chief,
                                            hooks=hooks) as mon_sess:
         local_step = 0
         while not mon_sess.should_stop():
-            if local_step % 10 == 0:
+
+            # Compute summary
+            if is_chief and (local_step % 10 == 0):
                 eval_xs, eval_ys = mnist.test.images, mnist.test.labels
                 summary, acc = mon_sess.run([merged, accuracy], feed_dict={x: eval_xs, y_: eval_ys})
                 print('Accuracy at global step {} (local step {}): {}'.format(
-                      mon_sess.run(global_step), local_step, acc))
+                    mon_sess.run(global_step), local_step, acc))
                 if is_chief:
                     test_writer.add_summary(summary, local_step)
-            train_xs, train_ys = mnist.train.next_batch(100)
-            summary, _ = mon_sess.run([merged, train_op], feed_dict={x: train_xs, y_: train_ys})
+
+            # Write summary
             if is_chief:
                 train_writer.add_summary(summary, local_step)
+
+            # Run training step
+            train_xs, train_ys = mnist.train.next_batch(100)
+            summary, _ = mon_sess.run([merged, train_op],
+                                      feed_dict={x: train_xs, y_: train_ys})
             local_step += 1
+
         if is_chief:
             train_writer.close()
             test_writer.close()
