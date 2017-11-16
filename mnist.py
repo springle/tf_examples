@@ -69,7 +69,7 @@ def main(server, log_dir, context):
         while not mon_sess.should_stop():
 
             # Compute summary
-            if is_chief and (local_step % 10 == 0):
+            if (local_step % 10 == 0):
                 eval_xs, eval_ys = mnist.test.images, mnist.test.labels
                 summary, acc = mon_sess.run([merged, accuracy], feed_dict={x: eval_xs, y_: eval_ys})
                 print('Accuracy at global step {} (local step {}): {}'.format(
