@@ -143,10 +143,8 @@ def train(server, FLAGS):
       tf.summary.scalar('accuracy', accuracy)
 
   # Begin session
-  config = server.server_def.default_session_config
   with tf.train.MonitoredTrainingSession(master=server.target,
                                          is_chief=is_chief,
-                                         hooks=hooks,
                                          config=config) as sess:
 
       # Merge all the summaries and write them out to
