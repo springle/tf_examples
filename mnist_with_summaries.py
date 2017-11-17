@@ -143,13 +143,13 @@ def train(server, FLAGS):
       tf.summary.scalar('accuracy', accuracy)
 
   # Begin session
+  merged = tf.summary.merge_all()
   with tf.train.MonitoredTrainingSession(master=server.target,
                                          is_chief=is_chief,
                                          config=config) as sess:
 
       # Merge all the summaries and write them out to
       # /tmp/tensorflow/mnist/logs/mnist_with_summaries (by default)
-      merged = tf.summary.merge_all()
       train_writer = tf.summary.FileWriter(FLAGS.log_dir + '/train', sess.graph) if is_chief else None
       test_writer = tf.summary.FileWriter(FLAGS.log_dir + '/test') if is_chief else None
 
