@@ -32,10 +32,8 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
 
-FLAGS = None
 
-
-def train(server):
+def train(server, FLAGS):
 
   # Parse server
   is_chief = (server.server_def.task_index == 0)
@@ -231,4 +229,4 @@ def main(server, log_dir, context):
   if tf.gfile.Exists(FLAGS.log_dir):
     tf.gfile.DeleteRecursively(FLAGS.log_dir)
   tf.gfile.MakeDirs(FLAGS.log_dir)
-  train(server)
+  train(server, FLAGS)
